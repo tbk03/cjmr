@@ -1,0 +1,337 @@
+---
+title: "plot_style_guide"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{plot_style_guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(cjmr)
+library(tidyverse)
+```
+
+```{r build_package_to_test}
+setwd("C:/Users/chris/Desktop/Data Analysis Projects")
+devtools::install("cjmr")
+```
+
+## Some charts to work with
+
+### A column chart
+
+Based on a [chart](https://twitter.com/jburnmurdoch/status/1394359543287660546/photo/1) produced by John Burn Murdoch at the Financial Times
+
+```{r variant_growth_trends}
+
+# **************************************************************************
+# set up for plotting
+# **************************************************************************
+
+library(lubridate)  # for date manipulation
+library(slider)     # for calculating moving averages
+
+# read in covid-19 case data
+cases <- read_csv("../inst/extdata/utla_2021-05-19.csv") %>%
+  # standardise naming
+  janitor::clean_names()
+
+# define areas of particular interest
+areas_of_interest = c("Bedford", "Bolton", "Sefton", "Blackburn with Darwen")
+
+
+# **************************************************************************
+# process data for plotting
+# **************************************************************************
+areas_focus <- cases %>%
+  
+  # focus down on areas and timeframe of interest
+  filter(area_name %in% areas_of_interest,
+         date %within% interval(ymd("2021-04-01"), ymd("2021-05-14"))) %>% 
+  
+  # remove variables which won't be used
+  select(-area_code, -area_type) %>%
+  
+  # calculate seven day moving average number of new cases
+  group_by(area_name) %>%
+  arrange(date) %>% 
+  mutate(seven_day_mean = slide_dbl(new_cases_by_specimen_date_rolling_rate, 
+                                    ~mean(.x), .before = 3, .after = 3)) %>% 
+  
+  # classify each day for each area of interest according to growth trend
+  mutate(rate = (seven_day_mean - lag(seven_day_mean)) / lag(seven_day_mean),
+         trend = case_when(
+           rate <= 0 ~ "declining",
+           rate >= lag(rate) ~ "accelerating",
+           rate >= 0 ~ "stabilising",
+           TRUE ~ "NA"
+         ))
+
+# **************************************************************************
+# producing the plot
+# **************************************************************************
+
+p1 <- ggplot(data = areas_focus, mapping = aes(date, seven_day_mean,
+                                         fill = trend, colour = trend)) +
+  geom_col() +
+  
+  facet_wrap(~area_name, ncol = 4)
+
+p1
+
+```
+
+### A bubble chart
+
+Also based on a [chart](https://twitter.com/jburnmurdoch/status/1393124840194904064) produced by John Burn Murdoch at the Financial Times
+
+```{r}
+# **************************************************************************
+# set up for plotting
+# **************************************************************************
+
+# read in additional data on prevalance of covid-19 variants in upper tier
+# local authorities
+variants <- read_tsv("../inst/extdata/lineages_by_ltla_and_week_2021_05_17.tsv") %>% 
+  janitor::clean_names()
+
+
+# **************************************************************************
+# process data for plotting
+# **************************************************************************
+
+# process variant data
+latest_variants <- variants %>% 
+  
+  # focused down on the latest weeks data and
+  # only include local authorities where more 20 test have been sequenced
+  # to identify the variants
+  filter(week_end_date == "2021-05-08",
+         count >= 20) %>% 
+  
+  # transform data to create one variable per variant
+  pivot_wider(names_from = lineage, values_from = count,
+              values_fill = 0) %>%
+  
+  # calculate the perecentage of tests showing B.1.617.2 in each local authority
+  mutate(count = `B.1.1.7` + `B.1.617.2`) %>% 
+  mutate(perc_var_concern = `B.1.617.2` / count) %>% 
+  
+  # drop variables that are not needed for plotting
+  select(ltla, perc_var_concern)
+
+# process case data 
+weekly_change_df <- cases %>%
+  
+  # add in variant data
+  inner_join(latest_variants, by = c("area_code" = "ltla")) %>% 
+  
+  # remove unnessary variables
+  select(-area_code, -area_type) %>%
+  
+  # focus on a specific week window of interest
+  filter(date == ymd("2021-05-12") | 
+           date == ymd("2021-05-05")) %>% 
+  
+  # rename to simplify variable name
+  rename(rolling_rate = new_cases_by_specimen_date_rolling_rate) %>%
+  
+  # calculate percentage change in cases over the week
+  pivot_wider(names_from = date, values_from = rolling_rate) %>% 
+  mutate(weekly_change = `2021-05-12` / `2021-05-05`)
+
+
+# **************************************************************************
+# produce the plot
+# **************************************************************************
+
+p2 <- ggplot(weekly_change_var_df, aes(perc_var_concern, weekly_change)) +
+  geom_point(aes(size = `2021-05-12`)) +
+  ggrepel::geom_label_repel(aes(label = area_name)) # add labels for interpretation
+  
+p2 
+```
+
+### An area chart
+
+Also based on a [chart](https://twitter.com/jburnmurdoch/status/1394359535754698755) produced by John Burn Murdoch at the Financial Times
+
+```{r}
+# **************************************************************************
+# process data for plotting
+# **************************************************************************
+
+# create a lookup mapping area_code to area_name
+# as variant date does not include area_name
+la_lookup <- select(cases, area_code, area_name) %>% 
+  distinct()
+  
+# focus down on subset of variant data
+variants_simplified <- variants %>%
+  
+  # focus on recent data (after a specified data)
+  filter(week_end_date >= ymd("2021-04-01")) %>%
+  
+  # add in area_names
+  left_join(la_lookup, by = c("ltla" = "area_code")) %>% 
+  
+  # focus on areas of interest
+  filter(area_name %in% areas_of_interest) %>% 
+  
+  # simplify variants to compare B.1.617.2 to other variants
+  mutate(lineage = case_when(
+    lineage == "B.1.617.2" ~ "B.1.617.2",
+    TRUE ~ "Other")) %>% 
+  group_by(area_name, week_end_date, lineage) %>% 
+  summarise(count = sum(count)) %>% 
+  ungroup()
+
+# there are some weeks which missing either for "B.1.617.2" or "Other" observation
+# for some local authorities, this causes problems (i.e. gaps) in the area plot
+# so I needed to create rows for the missing observations with count of zero
+# to do this I need to work out all combinations of area_name, week_end_date and
+# lineage
+
+# select simplified variant classifications
+variant_names <- distinct(variants_simplified, lineage)$lineage
+
+# select all week_end_date s in the data set
+weeks <- variants_simplified %>% 
+  group_by(week_end_date) %>% 
+  summarise(uniqueid = n_distinct(week_end_date)) %>% 
+  select(week_end_date)
+
+# create a grid of all combinations of area_name, week_end_date and lineage
+wks_line_comb <- expand.grid(area_name = areas_of_interest, 
+                             week_end_date = weeks$week_end_date, 
+                             lineage = variant_names)
+
+# join the grid with the variant data so all rows needed for plotting are
+# present 
+variants_simp_comp <- variants_simplified %>% 
+  full_join(wks_line_comb) %>% 
+  mutate(count = replace_na(count, 0))
+
+
+# **************************************************************************
+# produce the plot
+# **************************************************************************
+
+p3 <- ggplot(variants_simp_comp, aes(week_end_date, count,
+                                fill = lineage,
+                                colour = lineage)) +
+  geom_area() +
+  facet_wrap(~area_name)
+
+p3
+```
+
+### A line graph
+
+Making use of data to hand to create a simple line graph.
+
+```{r}
+# **************************************************************************
+# process data for plotting
+# **************************************************************************
+
+all_areas <- cases %>% 
+  
+  # focus down on a date window of interest
+  filter(date %within% interval(ymd("2021-04-01"), ymd("2021-05-14")))
+
+# **************************************************************************
+# produce the plot
+# **************************************************************************
+
+p4 <- ggplot(all_areas, aes(date, new_cases_by_specimen_date_rolling_rate, group = area_name)) +
+  geom_line()
+
+p4
+```
+
+### A heatmap
+
+Finally for now, a [heatmap](https://twitter.com/TigressEllie/status/1394338390154350600) as shown on the UK Government Covid-19 data portal.
+
+```{r}
+# **************************************************************************
+# set up for plotting
+# **************************************************************************
+
+# read in additional covid-19 case data by age (for Bolton only)
+bolton_cases_by_age <- read_csv("../inst/extdata/utla_E08000001_2021-05-20.csv") %>%
+  # standardise naming
+  janitor::clean_names()
+
+# **************************************************************************
+# process data for plotting
+# **************************************************************************
+
+bolton_cases_by_age <- bolton_cases_by_age %>% 
+  
+  # following the example plot aggregate rolling rates of 800+ into one group
+  mutate(rolling_rate = if_else(rolling_rate >= 800, 800, rolling_rate)) %>% 
+  
+  # remove an NA age catergory
+  filter(age != "unassigned")
+
+# **************************************************************************
+# produce the plot
+# **************************************************************************
+
+p5 <- ggplot(bolton_cases_by_age, aes(date, age,
+                                fill = rolling_rate)) +
+  geom_tile() +
+  scale_fill_viridis_c(direction = -1)
+
+p5
+```
+
+## Plot anatomy
+
+### Dimensions
+
+### Title
+
+### Subtitle
+
+### Axis titles
+
+### Axis labels
+
+### Axis lines
+
+### Gridlines
+
+### Legend
+
+### Data
+
+-   Markers
+
+-   Labels
+
+-   Series
+
+Sources and notes
+
+## Colour pallettes
+
+### Binary
+
+### Sequential
+
+### Diverging
+
+### Categorical
+
+### Highlighting

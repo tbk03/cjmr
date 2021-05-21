@@ -11,3 +11,7 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/tbk03/cjmr
 BugReports: https://github.com/tbk03/cjmr/issues
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
