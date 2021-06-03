@@ -1,6 +1,8 @@
 ---
 title: "plot_style_guide"
-output: rmarkdown::html_vignette
+output: 
+  html_document:
+    fig_retina: 1
 vignette: >
   %\VignetteIndexEntry{plot_style_guide}
   %\VignetteEngine{knitr::rmarkdown}
@@ -153,7 +155,7 @@ weekly_change_df <- cases %>%
 # produce the plot
 # **************************************************************************
 
-p2 <- ggplot(weekly_change_var_df, aes(perc_var_concern, weekly_change)) +
+p2 <- ggplot(weekly_change_df, aes(perc_var_concern, weekly_change)) +
   geom_point(aes(size = `2021-05-12`)) +
   ggrepel::geom_label_repel(aes(label = area_name)) # add labels for interpretation
   
@@ -220,6 +222,13 @@ variants_simp_comp <- variants_simplified %>%
   full_join(wks_line_comb) %>% 
   mutate(count = replace_na(count, 0))
 
+# enable the order of facets to be specified
+variants_simp_comp <- variants_simp_comp %>% 
+  mutate(area_name = factor(area_name,
+                            levels = c("Bolton","Blackburn with Darwen", 
+                                       "Sefton", "Bedford")))
+  
+
 
 # **************************************************************************
 # produce the plot
@@ -228,17 +237,128 @@ variants_simp_comp <- variants_simplified %>%
 p3 <- ggplot(variants_simp_comp, aes(week_end_date, count,
                                 fill = lineage,
                                 colour = lineage)) +
-  geom_area() +
-  facet_wrap(~area_name)
+  geom_area()
 
-p3
+p3 +
+  facet_wrap(~area_name)
+```
+
+```{r}
+sysfonts::font_add_google("Roboto", "robo")
+sysfonts::font_add_google("Roboto Slab", "slab")
+
+
+```
+
+```{r, fig.width=7, fig.height=10, fig.showtext=TRUE}
+
+# , lineheight = .4
+
+
+explanatory_theme <- function(){  
+  
+  list(
+    ggplot2::theme_light(),
+  
+    ggplot2::theme(
+
+    # format text
+    text = ggplot2::element_text(family = "robo", size = 14),
+    plot.title = ggplot2::element_text(hjust = 0.5, 
+                                       family = "slab",
+                                       size = 18),
+    plot.subtitle = ggplot2::element_text(hjust = -0.05, 
+                                          size = 14),
+    plot.caption = ggplot2::element_text(size = 12, hjust = 0),
+    
+    # format legend
+    legend.position = "top",
+    legend.background = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank(),
+    
+    # format axis
+    axis.title.y = ggplot2::element_blank(),
+    axis.line.y = ggplot2::element_blank(),
+    axis.line.x = ggplot2::element_line(colour = "black", size = 1),
+    axis.ticks.x = ggplot2::element_line(colour = "black", size = 1),
+    axis.text.x = ggplot2::element_text(margin=ggplot2::margin(t = 7.5, b = 10)),
+  
+    # format plot gridlines
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.x = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(colour = grid_line_colour),
+    
+    # format plot background
+    panel.background = ggplot2::element_blank(),
+  
+    # format overall background (i.e. background behind the entire figure
+    # including the plot, titles etc.)
+    plot.background = element_rect(fill = background_colour),
+  
+    # facet labels background
+    strip.background = ggplot2::element_rect(fill=background_colour),
+    strip.text = ggplot2::element_text(colour = text_colour, face = "bold",
+                                       size = 14),
+    panel.border = ggplot2::element_blank()
+    )
+  )
+}  
+
+
+binary_pallette <- ggthemes::fivethirtyeight_pal()(2)
+binary_pallette_subtle <- c(nord::nord("lumina")[3], nord::nord("lumina")[2])
+
+# Automatically use showtext to render text
+showtext::showtext_auto()
+showtext::showtext_opts(dpi = 300)
+
+grid_line_colour <- "grey"
+text_colour <- "black"
+background_colour <- "grey98"
+
+
+p3_formatted <- p3 +
+  
+  labs(title = "Holding title",
+       subtitle = "Number of cases\nsequenced",
+       x = NULL,
+       caption = "Source:") +
+  
+  # remove gaps between the axis and the start of plot
+  # see https://ggplot2.tidyverse.org/reference/expansion.html
+  ggplot2::scale_x_date(expand = expansion(mult = c(0, 0))) +
+  ggplot2::scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  
+  scale_fill_manual(values = binary_pallette_subtle) +
+  scale_colour_manual(values = binary_pallette_subtle) +
+  
+  
+  lemon::facet_rep_wrap(~area_name, ncol = 1, repeat.tick.labels = "bottom") +
+  explanatory_theme() +
+  theme(legend.position = "none")
+
+#+
+  # patchwork::plot_annotation(
+  #   caption = "Data Viz: @analytics_urban",
+  #   theme = theme(
+  #     text = ggplot2::element_text(family = "robo", size = 12),
+  #     plot.caption = element_text(hjust = 0)
+  #   ))
+  
+  
+
+ggsave("test1.png", plot = p3_formatted, width = 7, height = 10, unit = "in", dpi = 300)
+showtext::showtext_auto(FALSE)
+
+magick::image_read("test1.png")
+#showtext::showtext_end()
 ```
 
 ### A line graph
 
 Making use of data to hand to create a simple line graph.
 
-```{r}
+```{r, fig.showtext=TRUE, fig.width=7, fig.height=4.5}
 # **************************************************************************
 # process data for plotting
 # **************************************************************************
@@ -251,11 +371,31 @@ all_areas <- cases %>%
 # **************************************************************************
 # produce the plot
 # **************************************************************************
+showtext::showtext.auto()
+showtext::showtext_opts(dpi = 300)
 
 p4 <- ggplot(all_areas, aes(date, new_cases_by_specimen_date_rolling_rate, group = area_name)) +
   geom_line()
 
-p4
+p4_formatted <- p4 +
+  explanatory_theme() +
+  ggplot2::scale_x_date(expand = expansion(mult = c(0, 0))) +
+  ggplot2::scale_y_continuous(expand = expansion(mult = c(0, 0.1))) 
+
+finalise_plot <- function(f_name, plot, width = 7, height = 4.5){
+  
+  ggsave(f_name, plot = plot, 
+         width = width, height = height, unit = "in", 
+         dpi = 300)
+  
+  magick::image_read(f_name)
+}
+
+finalise_plot("p4.png", p4_formatted)
+
+
+
+showtext::showtext.auto(FALSE)
 ```
 
 ### A heatmap
@@ -328,7 +468,20 @@ Sources and notes
 
 ## Colour pallettes
 
-### Binary
+A long list of colour palettes - <https://github.com/EmilHvitfeldt/r-color-palettes>
+
+### Binary - bold
+
+```{r}
+scales::show_col(ggthemes::fivethirtyeight_pal()(2))
+```
+
+### Binary - subtle
+
+```{r}
+nord::nord_show_palette("lumina")
+
+```
 
 ### Sequential
 
