@@ -81,6 +81,8 @@ scale_y_continuous(breaks = seq(0,350, 50), # labels
 
 ## Colour palettes
 
+## Remember it is an iterative process
+
 ## Import data
 
 ```{r}
@@ -109,45 +111,62 @@ scale_y_continuous(breaks = seq(0,350, 50), # labels
 
 -   **Are there some other datasets that might be useful for comparisons?**
 
+## Think about the audience
+
+| To think about                                                                    | Notes |
+|-----------------------------------------------------------------------------------|-------|
+| Can you think of a group of people who might view the visualisations?             |       |
+| Can you think of a specific person who might view the visualizations?             |       |
+| What do want the audience to know or be able to after viewing the visualizations? |       |
+| What expectations might the audience have about visualisations of this data?      |       |
+
 ## Ask some questions to be answered by the visualizations
 
 1.  ...
 
-2.   ...
+2.  ...
+
+## Summarize the story that the visualizations can help tell
+
+Based on the questions above, the story might go something like this:
+
+-   ...
+
+-   ...
 
 ## Create the visualisation/s
 
-### Visualization  1 (question n)
+### Visualization 1 (question n)
 
-+---------------------+-----------------------+------------------------------------------+
-| Question            | Answer (i.e. title)   | Emphasize in design and annotation layer |
-+=====================+=======================+==========================================+
-|                     |                       |                                          |
-+---------------------+-----------------------+------------------------------------------+
-
-```{r}
-
-```
-
-### Visualization  x (question n)
-
-+---------------------+-----------------------+------------------------------------------+
-| Question            | Answer (i.e. title)   | Emphasize in design and annotation layer |
-+=====================+=======================+==========================================+
-|                     |                       |                                          |
-+---------------------+-----------------------+------------------------------------------+
++----------------+---------------------+-----------------------------------------------+
+| Question       | Answer (i.e. title) | Notes to consider in design, chart types etc. |
++================+=====================+===============================================+
+|                |                     |                                               |
++----------------+---------------------+-----------------------------------------------+
 
 ```{r}
 
 ```
 
-### Visualization  x (question n)
+### Visualization x (question n)
 
-+---------------------+-----------------------+------------------------------------------+
-| Question            | Answer (i.e. title)   | Emphasize in design and annotation layer |
-+=====================+=======================+==========================================+
-|                     |                       |                                          |
-+---------------------+-----------------------+------------------------------------------+
++----------------+---------------------+-----------------------------------------------+
+| Question       | Answer (i.e. title) | Notes to consider in design, chart types etc. |
++================+=====================+===============================================+
+|                |                     |                                               |
++----------------+---------------------+-----------------------------------------------+
+
+```{r}
+
+```
+
+### Visualization x (question n)
+
++----------------+---------------------+-----------------------------------------------+
+| Question       | Answer (i.e. title) | Notes to consider in design, chart types etc. |
++================+=====================+===============================================+
+|                |                     |                                               |
++----------------+---------------------+-----------------------------------------------+
 
 ```{r}
 
@@ -176,3 +195,29 @@ ggsave(str_c(file_folder, file_name, ".svg"))
 
 # if saving as a pdf use device = cairo_pdf in ggsave 
 ```
+
+## Import back in the vizualisation as an image
+
+## Consider how well the overall design works
+
+Based on [Flowing Data](https://flowingdata.com/visualization-for-clarity/designing-for-an-audience/adjusting-for-the-differences/).
+
+Think about each issue (in bold below) as a continuum rather than a check-box.
+
++-----------------------------------------------------+--------------------------------------------------------------+---------------------+
+| Question to consider                                | Tips                                                         | Notes               |
++=====================================================+==============================================================+=====================+
+| Are the **encodings** explained?                    | Air on the side of too much explanation ...                  |                     |
++-----------------------------------------------------+--------------------------------------------------------------+---------------------+
+| Is the **context** explained?                       | Titles, subtitles                                            |                     |
+|                                                     |                                                              |                     |
+|                                                     | Annotate                                                     |                     |
+|                                                     |                                                              |                     |
+|                                                     | Use colour to highlight                                      |                     |
++-----------------------------------------------------+--------------------------------------------------------------+---------------------+
+| Does it have **readability** like text?             | Think visual hierarchy *(as when laying out text)*           |                     |
++-----------------------------------------------------+--------------------------------------------------------------+---------------------+
+| Do the **aesthetics** align with the topic/message? | Serious topic -\> dark colours, straight-forward chart types |                     |
++-----------------------------------------------------+--------------------------------------------------------------+---------------------+
+
+## Remember it is an iterative process
