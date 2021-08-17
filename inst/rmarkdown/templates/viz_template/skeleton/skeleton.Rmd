@@ -27,21 +27,18 @@ library(ggtext)     # improved text rendering for ggplot2
 library(ggforce)    # extra functionality for ggplot2 inc. improved annotation
 library(patchwork)  # composing layouts with multiple plots
 library(ggdist)     # visualising uncertainty and distributions
+library(readxl)     # for reading Excel files
+library(lubridate)  # for dates
+library(readxl)     # for reading excel files
 
 # packages for using custom fonts
 library(systemfonts)
 library(textshaping)
 
 library(cjmr)       # my own package including default styling for plots
-```
 
-```{r}
-mtcars %>% 
-  ggplot(aes(wt, hp)) +
-  geom_point() +
-  theme_cjmr_explanatory()+
-  #clean_axis() +
-  scale_y_continuous(breaks = seq(0,350, 50), limits = c(0, 350))
+# set default theme for exploratory plots
+theme_set(theme_light())
 ```
 
 ## Source of info on common ggplot2 tasks
@@ -58,7 +55,7 @@ mtcars %>%
 
 [Changing the size of a legend](https://z3tt.github.io/OutlierConf2021/#legend-design) - Cédric Scherer
 
-```{r}
+```{r, eval=FALSE}
 guides(color = guide_colorbar(title.position = "top", 
                                 title.hjust = .5, 
                                 barwidth = unit(20, "lines"), 
@@ -68,13 +65,13 @@ guides(color = guide_colorbar(title.position = "top",
 
 [Changing margins](https://z3tt.github.io/OutlierConf2021/#white-space) - Cédric Scherer
 
-```{r}
-theme(plot.margin = margin(t = 25, r = 25, b = 10, l = 25))) # top, right, bottom, left
+```{r, eval=FALSE}
+theme(plot.margin = margin(t = 25, r = 25, b = 10, l = 25)) # top, right, bottom, left
 ```
 
 Adjusting axis
 
-```{r}
+```{r, eval=FALSE}
 scale_y_continuous(breaks = seq(0,350, 50), # labels
                    limits = c(0, 350)) # extent of axis
 ```
@@ -113,12 +110,17 @@ scale_y_continuous(breaks = seq(0,350, 50), # labels
 
 ## Think about the audience
 
++-----------------------------------------------------------------------------------+-------+
 | To think about                                                                    | Notes |
-|-----------------------------------------------------------------------------------|-------|
++===================================================================================+=======+
 | Can you think of a group of people who might view the visualisations?             |       |
++-----------------------------------------------------------------------------------+-------+
 | Can you think of a specific person who might view the visualizations?             |       |
++-----------------------------------------------------------------------------------+-------+
 | What do want the audience to know or be able to after viewing the visualizations? |       |
++-----------------------------------------------------------------------------------+-------+
 | What expectations might the audience have about visualisations of this data?      |       |
++-----------------------------------------------------------------------------------+-------+
 
 ## Ask some questions to be answered by the visualizations
 
@@ -138,11 +140,11 @@ Based on the questions above, the story might go something like this:
 
 ### Visualization 1 (question n)
 
-+----------------+---------------------+-----------------------------------------------+
-| Question       | Answer (i.e. title) | Notes to consider in design, chart types etc. |
-+================+=====================+===============================================+
-|                |                     |                                               |
-+----------------+---------------------+-----------------------------------------------+
++-------------+---------------------+-----------------------------------------------+
+| Question    | Answer (i.e. title) | Notes to consider in design, chart types etc. |
++=============+=====================+===============================================+
+|             |                     |                                               |
++-------------+---------------------+-----------------------------------------------+
 
 ```{r}
 
@@ -150,11 +152,11 @@ Based on the questions above, the story might go something like this:
 
 ### Visualization x (question n)
 
-+----------------+---------------------+-----------------------------------------------+
-| Question       | Answer (i.e. title) | Notes to consider in design, chart types etc. |
-+================+=====================+===============================================+
-|                |                     |                                               |
-+----------------+---------------------+-----------------------------------------------+
++-------------+---------------------+-----------------------------------------------+
+| Question    | Answer (i.e. title) | Notes to consider in design, chart types etc. |
++=============+=====================+===============================================+
+|             |                     |                                               |
++-------------+---------------------+-----------------------------------------------+
 
 ```{r}
 
@@ -162,11 +164,11 @@ Based on the questions above, the story might go something like this:
 
 ### Visualization x (question n)
 
-+----------------+---------------------+-----------------------------------------------+
-| Question       | Answer (i.e. title) | Notes to consider in design, chart types etc. |
-+================+=====================+===============================================+
-|                |                     |                                               |
-+----------------+---------------------+-----------------------------------------------+
++-------------+---------------------+-----------------------------------------------+
+| Question    | Answer (i.e. title) | Notes to consider in design, chart types etc. |
++=============+=====================+===============================================+
+|             |                     |                                               |
++-------------+---------------------+-----------------------------------------------+
 
 ```{r}
 
@@ -204,20 +206,21 @@ Based on [Flowing Data](https://flowingdata.com/visualization-for-clarity/design
 
 Think about each issue (in bold below) as a continuum rather than a check-box.
 
-+-----------------------------------------------------+--------------------------------------------------------------+---------------------+
-| Question to consider                                | Tips                                                         | Notes               |
-+=====================================================+==============================================================+=====================+
-| Are the **encodings** explained?                    | Air on the side of too much explanation ...                  |                     |
-+-----------------------------------------------------+--------------------------------------------------------------+---------------------+
-| Is the **context** explained?                       | Titles, subtitles                                            |                     |
-|                                                     |                                                              |                     |
-|                                                     | Annotate                                                     |                     |
-|                                                     |                                                              |                     |
-|                                                     | Use colour to highlight                                      |                     |
-+-----------------------------------------------------+--------------------------------------------------------------+---------------------+
-| Does it have **readability** like text?             | Think visual hierarchy *(as when laying out text)*           |                     |
-+-----------------------------------------------------+--------------------------------------------------------------+---------------------+
-| Do the **aesthetics** align with the topic/message? | Serious topic -\> dark colours, straight-forward chart types |                     |
-+-----------------------------------------------------+--------------------------------------------------------------+---------------------+
++-----------------------------------------------------+--------------------------------------------------------------+----------+
+| Question to consider                                | Tips                                                         | Notes    |
++=====================================================+==============================================================+==========+
+| Are the **encodings** explained?                    | Air on the side of too much explanation ...                  |          |
++-----------------------------------------------------+--------------------------------------------------------------+----------+
+| Is the **context** explained?                       | Titles, subtitles                                            |          |
+|                                                     |                                                              |          |
+|                                                     | Annotate                                                     |          |
+|                                                     |                                                              |          |
+|                                                     | Use colour to highlight                                      |          |
++-----------------------------------------------------+--------------------------------------------------------------+----------+
+| Does it have **readability** like text?             | Think visual hierarchy *(as when laying out text)*           |          |
++-----------------------------------------------------+--------------------------------------------------------------+----------+
+| Do the **aesthetics** align with the topic/message? | Serious topic -\> dark colours, straight-forward chart types |          |
++-----------------------------------------------------+--------------------------------------------------------------+----------+
 
 ## Remember it is an iterative process
+
