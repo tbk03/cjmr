@@ -32,8 +32,9 @@ library(lubridate)  # for dates
 library(readxl)     # for reading excel files
 
 # packages for using custom fonts
-library(systemfonts)
-library(textshaping)
+# library(systemfonts)
+# library(textshaping)
+library(ragg)
 
 library(cjmr)       # my own package including default styling for plots
 
@@ -75,6 +76,19 @@ Adjusting axis
 scale_y_continuous(breaks = seq(0,350, 50), # labels
                    limits = c(0, 350)) # extent of axis
 ```
+
+Saving using custom fonts with ragg
+
+```{r}
+ggplot(mtcars, aes(hp, mpg)) +
+  geom_point() +
+  labs(title = "22222222222222222") +
+  theme(text = element_text(family = "Roboto"),
+        plot.title = element_text(size = 50))
+
+ggsave("filename.png", device = ragg::agg_png())
+```
+
 
 ## Colour palettes
 
