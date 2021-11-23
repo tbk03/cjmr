@@ -7,6 +7,7 @@
 
 theme_cjmr_explanatory <- function(){
 
+  axis_colour <- "grey20"
   grid_line_colour <- "grey80"
   text_colour <- "black"
   background_colour <- "grey98"
@@ -34,11 +35,12 @@ theme_cjmr_explanatory <- function(){
       axis.title.x = ggplot2::element_text(),
       axis.title.y = ggplot2::element_blank(),
       axis.line.y = ggplot2::element_blank(),
-      axis.line.x = ggplot2::element_blank(),
+      axis.line.x = ggplot2::element_line(colour = axis_colour),
       # axis.line.x = ggplot2::element_line(colour = "black", size = 1),
-      #axis.ticks.x = ggplot2::element_line(colour = grid_line_colour, size = 1),
-      axis.ticks = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_text(margin=ggplot2::margin(t = 1, b = 10)),
+      axis.ticks.x = ggplot2::element_line(colour = axis_colour, size = 1),
+      axis.ticks.y = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_text(margin=ggplot2::margin(t = 5, b = 10)),
+      axis.ticks.length.x = unit(1.5, "mm"),
 
       # format plot gridlines
       panel.grid.minor = ggplot2::element_blank(),
