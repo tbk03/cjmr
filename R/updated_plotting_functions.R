@@ -27,7 +27,7 @@ theme_cjmr_explanatory <- function(){
       # format legend
       legend.position = "top",
       legend.background = ggplot2::element_blank(),
-      legend.title = ggplot2::element_blank(),
+      legend.title = ggplot2::element_text(size = 10),
       legend.text = ggplot2::element_text(size = 10),
 
       # format axis
